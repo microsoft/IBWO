@@ -13,12 +13,11 @@ from torch.utils.data import DataLoader
 
 from cnn_model.load_dataset import AudioDataset
 
-
 DATE = datetime.now().strftime('%Y%m%d_%H%M%S')
 
 RUN_NAME = DATE
 
-BATCH_SIZE = 32
+BATCH_SIZE = 15
 NUM_CLASSES = 2
 MAX_NUM_EPOCHS = 10000
 
@@ -27,16 +26,6 @@ CHECKPOINT = False
 CHECKPOINT_PATH = ''
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-train_dir = "train_files"
-test_dir = "test_files"
-
-TRAIN = AudioDataset(train_dir)
-TEST = AudioDataset(test_dir)
-
-TRAIN_LOADER = DataLoader(dataset=TRAIN, batch_size=BATCH_SIZE, shuffle=True)
-TEST_LOADER = DataLoader(dataset=TEST, batch_size=BATCH_SIZE, shuffle=True)
-
 
 class ConvBlock(nn.Module):
     """creates a convolutional layer with optional maxpool, batchnorm, and dropout"""
@@ -88,7 +77,6 @@ class AudioCNN(nn.Module):
         super(AudioCNN, self).__init__()
 
         dropout = .5
-        self.emb_size = 49152
 
         # spectrogram convolutions
         self.conv_block_1 = ConvBlock(in_channels=1, out_channels=8, kernel_size=(1, 1), stride=(1, 1),
@@ -125,7 +113,7 @@ class AudioCNN(nn.Module):
     def forward(self, nn_input):
 
         x = nn_input  # spectrogram
-
+        # print(x.shape)
         # spectrogram convolutions
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
@@ -133,9 +121,9 @@ class AudioCNN(nn.Module):
         x = self.conv_block_4(x)
         x = self.conv_block_5(x)
         x = self.conv_block_6(x)
-
+        # print(x.shape)
         x = x.view(x.size(0), -1)
-
+        # print(x.shape)
         ## fully-connected layers
         x = self.fc1(x)
         x = self.fc1_bn(x)
@@ -148,6 +136,15 @@ class AudioCNN(nn.Module):
 
 
 if __name__ == '__main__':
+
+    train_dir = "train_files"
+    test_dir = "test_files"
+
+    TRAIN = AudioDataset(train_dir)
+    TEST = AudioDataset(test_dir)
+
+    TRAIN_LOADER = DataLoader(dataset=TRAIN, batch_size=BATCH_SIZE, shuffle=True)
+    TEST_LOADER = DataLoader(dataset=TEST, batch_size=BATCH_SIZE, shuffle=True)
 
     model = AudioCNN().to(device)
 
